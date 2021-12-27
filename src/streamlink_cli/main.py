@@ -49,11 +49,12 @@ def get_formatter(plugin):
     return Formatter(
         {
             "url": lambda: args.url,
+            "id": lambda: plugin.get_id(),
             "author": lambda: plugin.get_author(),
             "category": lambda: plugin.get_category(),
             "game": lambda: plugin.get_category(),
             "title": lambda: plugin.get_title(),
-            "time": lambda: datetime.now()
+            "time": lambda: datetime.datetime.now()
         },
         {
             "time": lambda dt, fmt: dt.strftime(fmt)
@@ -81,7 +82,8 @@ def check_file_output(filename, force):
     return FileOutput(filename)
 
 
-def create_output(plugin):
+def create_output(formatter):
+    # type: (Formatter)
     """Decides where to write the stream.
 
     Depending on arguments it can be one of these:
@@ -99,11 +101,11 @@ def create_output(plugin):
         if args.output == "-":
             out = FileOutput(fd=stdout)
         else:
-            out = check_file_output(args.output, args.force)
+            out = check_file_output(formatter.path(args.output, args.fs_safe_rules), args.force)
     elif args.stdout:
         out = FileOutput(fd=stdout)
     elif args.record_and_pipe:
-        record = check_file_output(args.record_and_pipe, args.force)
+        record = check_file_output(formatter.path(args.record_and_pipe, args.fs_safe_rules), args.force)
         out = FileOutput(fd=stdout, record=record)
     else:
         http = namedpipe = record = None
@@ -121,10 +123,8 @@ def create_output(plugin):
         elif args.player_http:
             http = create_http_server()
 
-        title = create_title(plugin)
-
         if args.record:
-            record = check_file_output(args.record, args.force)
+            record = check_file_output(formatter.path(args.record, args.fs_safe_rules), args.force)
 
         log.info("Starting player: {0}".format(args.player))
 
@@ -132,7 +132,8 @@ def create_output(plugin):
                            quiet=not args.verbose_player,
                            kill=not args.player_no_close,
                            namedpipe=namedpipe, http=http,
-                           record=record, title=title)
+                           record=record,
+                           title=formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url)
 
     return out
 
@@ -248,16 +249,15 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
     server.close()
 
 
-def output_stream_passthrough(plugin, stream):
+def output_stream_passthrough(formatter, stream):
     """Prepares a filename to be passed to the player."""
     global output
 
-    title = create_title(plugin)
     filename = '"{0}"'.format(stream_to_url(stream))
     output = PlayerOutput(args.player, args=args.player_args,
                           filename=filename, call=True,
                           quiet=not args.verbose_player,
-                          title=title)
+                          title=formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url)
 
     try:
         log.info("Starting player: {0}".format(args.player))
@@ -300,9 +300,12 @@ def open_stream(stream):
     return stream_fd, prebuffer
 
 
-def output_stream(plugin, stream, last_stream):
+def output_stream(formatter, stream, last_stream):
     """Open stream, create output and finally write the stream to output."""
     global output
+
+    # create output before opening the stream, so file outputs can prompt on existing output
+    output = create_output(formatter)
 
     success_open = False
     for i in range(args.retry_open):
@@ -315,22 +318,15 @@ def output_stream(plugin, stream, last_stream):
                 i + 1, args.retry_open, stream, err))
 
     if not success_open:
-        if last_stream:
-            console.exit("Could not open stream {0}, tried {1} times, exiting", stream, args.retry_open)
-        else:
-            return False
-
-    output = create_output(plugin)
+        return console.exit("Could not open stream {0}, tried {1} times, exiting".format(stream, args.retry_open))
 
     try:
         output.open()
     except (IOError, OSError) as err:
         if isinstance(output, PlayerOutput):
-            console.exit("Failed to start player: {0} ({1})",
-                         args.player, err)
+            console.exit("Failed to start player: {0} ({1})".format(args.player, err))
         else:
-            console.exit("Failed to open output: {0} ({1})",
-                         args.output, err)
+            console.exit("Failed to open output: {0} ({1})".format(args.output, err))
 
     with closing(output):
         log.debug("Writing stream to output")
@@ -426,7 +422,10 @@ def handle_stream(plugin, streams, stream_name):
 
     # Print JSON representation of the stream
     elif console.json:
-        console.msg_json(stream)
+        console.msg_json(
+            stream,
+            metadata=plugin.get_metadata()
+        )
 
     elif args.stream_url:
         try:
@@ -444,6 +443,9 @@ def handle_stream(plugin, streams, stream_name):
         alt_streams = list(filter(lambda k: _name_contains_alt(k),
                                   sorted(streams.keys())))
         file_output = args.output or args.stdout
+
+        formatter = get_formatter(plugin)
+
         stream_names = [stream_name] + alt_streams
         count = 0
         for stream_name in stream_names:
@@ -454,7 +456,7 @@ def handle_stream(plugin, streams, stream_name):
             if stream_type in args.player_passthrough and not file_output:
                 log.info("Opening stream: {0} ({1})".format(stream_name,
                                                             stream_type))
-                success = output_stream_passthrough(plugin, stream)
+                success = output_stream_passthrough(formatter, stream)
             elif args.player_external_http:
                 return output_stream_http(plugin, streams, external=True,
                                           port=args.player_external_http_port)
@@ -463,7 +465,7 @@ def handle_stream(plugin, streams, stream_name):
             else:
                 log.info("Opening stream: {0} ({1})".format(stream_name,
                                                             stream_type))
-                success = output_stream(plugin, stream, count == len(stream_names))
+                success = output_stream(formatter, stream, count == len(stream_names))
 
             if success:
                 break
@@ -565,8 +567,9 @@ def handle_url():
     """
 
     try:
-        plugin = streamlink.resolve_url(args.url)
-        setup_plugin_options(streamlink, plugin)
+        pluginclass, resolved_url = streamlink.resolve_url(args.url)
+        setup_plugin_options(streamlink, pluginclass)
+        plugin = pluginclass(resolved_url)
         log.info("Found matching plugin {0} for URL {1}".format(plugin.module, args.url))
 
         if args.retry_max or args.retry_streams:
@@ -576,8 +579,7 @@ def handle_url():
                 retry_streams = args.retry_streams
             if args.retry_max:
                 retry_max = args.retry_max
-            streams = fetch_streams_with_retry(plugin, retry_streams,
-                                               retry_max)
+            streams = fetch_streams_with_retry(plugin, retry_streams, retry_max)
         else:
             streams = fetch_streams(plugin)
     except NoPluginError:
@@ -603,13 +605,21 @@ def handle_url():
                "found".format(", ".join(args.stream)))
 
         if console.json:
-            console.msg_json(dict(streams=streams, plugin=plugin.module,
-                                  error=err))
+            console.msg_json(
+                plugin=plugin.module,
+                metadata=plugin.get_metadata(),
+                streams=streams,
+                error=err
+            )
         else:
             console.exit("{0}.\n       Available streams: {1}",
                          err, validstreams)
     elif console.json:
-        console.msg_json(dict(plugin=plugin.module, streams=streams))
+        console.msg_json(
+            plugin=plugin.module,
+            metadata=plugin.get_metadata(),
+            streams=streams,
+        )
     elif args.stream_url:
         try:
             console.msg("{0}", streams[list(streams)[-1]].to_manifest_url())
@@ -670,11 +680,6 @@ def setup_args(parser, config_files=[], ignore_unknown=False):
 def setup_config_args(parser, ignore_unknown=False):
     config_files = []
 
-    if streamlink and args.url:
-        with ignored(NoPluginError):
-            plugin = streamlink.resolve_url(args.url)
-            config_files += ["{0}.{1}".format(fn, plugin.module) for fn in CONFIG_FILES]
-
     if args.config:
         # We want the config specified last to get highest priority
         config_files += list(reversed(args.config))
@@ -684,12 +689,20 @@ def setup_config_args(parser, ignore_unknown=False):
             config_files.append(config_file)
             break
 
+    if streamlink and args.url:
+        # Only load first available plugin config
+        with ignored(NoPluginError):
+            pluginclass, resolved_url = streamlink.resolve_url(args.url)
+            config_files += ["{0}.{1}".format(fn, pluginclass(resolved_url).module) for fn in CONFIG_FILES]
+
     if config_files:
         setup_args(parser, config_files, ignore_unknown=ignore_unknown)
 
 
 def setup_signals():
-    # Handle SIGTERM just like SIGINT
+    # restore default behavior of raising a KeyboardInterrupt on SIGINT (and SIGTERM)
+    # so cleanup code can be run when the user stops execution
+    signal.signal(signal.SIGINT, signal.default_int_handler)
     signal.signal(signal.SIGTERM, signal.default_int_handler)
 
 
@@ -999,7 +1012,7 @@ def setup_logger_and_console(stream=sys.stdout, filename=None, level="info", jso
         datefmt="%H:%M:%S"
     )
 
-    console = ConsoleOutput(streamhandler.stream, json)
+    console = ConsoleOutput(streamhandler.stream, streamlink, json)
 
 
 def main():
@@ -1023,8 +1036,6 @@ def main():
     log_file = args.logfile if log_level != "none" else None
     setup_logger_and_console(console_out, log_file, log_level, args.json)
 
-    setup_signals()
-
     setup_streamlink()
     # load additional plugins
     setup_plugins(args.plugin_dirs)
@@ -1043,11 +1054,15 @@ def main():
     log_current_versions()
     log_current_arguments(streamlink, parser)
 
+    setup_signals()
+
     if args.version_check or args.auto_version_check:
         with ignored(Exception):
             check_version(force=args.version_check)
 
-    if args.plugins:
+    if args.help:
+        parser.print_help()
+    elif args.plugins:
         print_plugins()
     elif args.can_handle_url:
         try:
@@ -1080,15 +1095,19 @@ def main():
                     stream_fd.close()
                 except KeyboardInterrupt:
                     error_code = 130
-    elif args.help:
-        parser.print_help()
     else:
         usage = parser.format_usage()
+        """
         msg = (
             "{usage}\nUse -h/--help to see the available options or "
             "read the manual at https://Billy2011.github.io/streamlink-27"
         ).format(usage=usage)
         console.msg(msg)
+        """
+        console.msg(
+            "{usage}\n"
+            "Use -h/--help to see the available options or read the manual at https://streamlink.github.io".format(usage=usage)
+        )
 
     sys.exit(error_code)
 

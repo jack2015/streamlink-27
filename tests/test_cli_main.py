@@ -1,29 +1,40 @@
+# -*- coding: utf-8 -*-
+
 import os
 import sys
 import tempfile
 import unittest
+from textwrap import dedent
 
 import streamlink_cli.main
-from streamlink.plugin.plugin import Plugin
+from streamlink.exceptions import StreamError
 from streamlink.session import Streamlink
-from streamlink_cli.compat import is_win32
+from streamlink_cli.compat import is_win32, stdout
 from streamlink_cli.main import (
+    Formatter,
     check_file_output,
     create_output,
     format_valid_streams,
     handle_stream,
     handle_url,
-    log_current_arguments,
-    resolve_stream_name
+    output_stream,
+    resolve_stream_name,
 )
 from streamlink_cli.output import FileOutput, PlayerOutput
 from tests.mock import Mock, call, patch
+from tests.plugins.testplugin import TestPlugin as _TestPlugin
 
 
-class FakePlugin:
-    @classmethod
-    def stream_weight(cls, stream):
-        return Plugin.stream_weight(stream)
+class FakePlugin(_TestPlugin):
+    module = "fake"
+    arguments = []
+    _streams = {}
+
+    def streams(self, *args, **kwargs):
+        return self._streams
+
+    def _get_streams(self):  # pragma: no cover
+        pass
 
 
 class TestCLIMain(unittest.TestCase):
@@ -117,7 +128,7 @@ class TestCLIMain(unittest.TestCase):
             "best": c
         }
         self.assertEqual(
-            format_valid_streams(FakePlugin, streams),
+            format_valid_streams(_TestPlugin, streams),
             ", ".join([
                 "audio",
                 "720p (worst)",
@@ -133,7 +144,7 @@ class TestCLIMain(unittest.TestCase):
             "best-unfiltered": c
         }
         self.assertEqual(
-            format_valid_streams(FakePlugin, streams),
+            format_valid_streams(_TestPlugin, streams),
             ", ".join([
                 "audio",
                 "720p (worst-unfiltered)",
@@ -141,16 +152,26 @@ class TestCLIMain(unittest.TestCase):
             ])
         )
 
-    @patch("streamlink_cli.main.args", stream_url=True, subprocess_cmdline=False)
+    @patch("streamlink_cli.main.args", json=True, stream_url=True, subprocess_cmdline=False)
     @patch("streamlink_cli.main.console", json=True)
     def test_handle_stream_with_json_and_stream_url(self, console, args):
         stream = Mock()
         streams = dict(best=stream)
-        plugin = Mock(FakePlugin(), module="fake", arguments=[], streams=Mock(return_value=streams))
+
+        plugin = FakePlugin("")
+        plugin._streams = streams
 
         handle_stream(plugin, streams, "best")
         self.assertEqual(console.msg.mock_calls, [])
-        self.assertEqual(console.msg_json.mock_calls, [call(stream)])
+        self.assertEqual(console.msg_json.mock_calls, [call(
+            stream,
+            metadata=dict(
+                id=u"test-id-1234-5678",
+                author=u"Tѥst Āuƭhǿr",
+                category=None,
+                title=u"Test Title"
+            )
+        )])
         self.assertEqual(console.error.mock_calls, [])
         console.msg_json.mock_calls *= 0
 
@@ -167,17 +188,28 @@ class TestCLIMain(unittest.TestCase):
         self.assertEqual(console.msg_json.mock_calls, [])
         self.assertEqual(console.exit.mock_calls, [call("The stream specified cannot be translated to a URL")])
 
-    @patch("streamlink_cli.main.args", stream_url=True, stream=[], default_stream=[], retry_max=0, retry_streams=0)
+    @patch("streamlink_cli.main.args", json=True, stream_url=True, stream=[], default_stream=[], retry_max=0, retry_streams=0)
     @patch("streamlink_cli.main.console", json=True)
     def test_handle_url_with_json_and_stream_url(self, console, args):
         stream = Mock()
         streams = dict(worst=Mock(), best=stream)
-        plugin = Mock(FakePlugin(), module="fake", arguments=[], streams=Mock(return_value=streams))
 
-        with patch("streamlink_cli.main.streamlink", resolve_url=Mock(return_value=plugin)):
+        class _FakePlugin(FakePlugin):
+            _streams = streams
+
+        with patch("streamlink_cli.main.streamlink", resolve_url=Mock(return_value=(_FakePlugin, ""))):
             handle_url()
             self.assertEqual(console.msg.mock_calls, [])
-            self.assertEqual(console.msg_json.mock_calls, [call(dict(plugin="fake", streams=streams))])
+            self.assertEqual(console.msg_json.mock_calls, [call(
+                plugin="fake",
+                metadata=dict(
+                    id=u"test-id-1234-5678",
+                    author=u"Tѥst Āuƭhǿr",
+                    category=None,
+                    title=u"Test Title"
+                ),
+                streams=streams
+            )])
             self.assertEqual(console.error.mock_calls, [])
             console.msg_json.mock_calls *= 0
 
@@ -202,21 +234,32 @@ class TestCLIMain(unittest.TestCase):
         args.stdout = None
         args.record = None
         args.record_and_pipe = None
+        args.player_fifo = False
         args.title = None
         args.player = "mpv"
         args.player_args = ""
         self.assertIsInstance(create_output(FakePlugin), PlayerOutput)
 
-    def test_create_output_file_output(self):
-        tmpfile = tempfile.NamedTemporaryFile()
-        try:
-            streamlink_cli.main.args = args = Mock()
-            streamlink_cli.main.console = Mock()
-            args.output = tmpfile.name
-            self.assertTrue(os.path.exists(tmpfile.name))
-            self.assertIsInstance(create_output(FakePlugin), FileOutput)
-        finally:
-            tmpfile.close()
+    @patch("streamlink_cli.main.args")
+    @patch("streamlink_cli.main.check_file_output")
+    def test_create_output_file_output(self, mock_check_file_output, args):
+        # type: (Mock, Mock)
+        formatter = Formatter({})
+        mock_check_file_output.side_effect = lambda path, force: FileOutput(path)
+        formatter = Formatter({})
+        args.output = "foo"
+        args.stdout = None
+        args.record = None
+        args.record_and_pipe = None
+        args.force = False
+        args.fs_safe_rules = None
+
+        output = create_output(formatter)
+        self.assertEqual(mock_check_file_output.call_args_list, [call("foo", False)])
+        self.assertIsInstance(output, FileOutput)
+        self.assertEqual(output.filename, "foo")
+        self.assertIsNone(output.fd)
+        self.assertIsNone(output.record)
 
     def test_create_output_stdout(self):
         streamlink_cli.main.console = Mock()
@@ -225,34 +268,66 @@ class TestCLIMain(unittest.TestCase):
         args.stdout = True
         self.assertIsInstance(create_output(FakePlugin), FileOutput)
 
-    def test_create_output_record_and_pipe(self):
-        tmpfile = tempfile.NamedTemporaryFile()
-        try:
-            streamlink_cli.main.console = Mock()
-            streamlink_cli.main.args = args = Mock()
-            args.output = None
-            args.stdout = None
-            args.record_and_pipe = tmpfile.name
-            self.assertIsInstance(create_output(FakePlugin), FileOutput)
-        finally:
-            tmpfile.close()
+    @patch("streamlink_cli.main.args")
+    @patch("streamlink_cli.main.check_file_output")
+    def test_create_output_record_and_pipe(self, mock_check_file_output, args):
+        # type: (Mock, Mock)
+        formatter = Formatter({})
+        mock_check_file_output.side_effect = lambda path, force: FileOutput(path)
+        args.output = None
+        args.stdout = None
+        args.record_and_pipe = "foo"
+        args.force = False
+        args.fs_safe_rules = None
 
-    def test_create_output_record(self):
-        tmpfile = tempfile.NamedTemporaryFile()
-        try:
-            streamlink_cli.main.console = Mock()
-            streamlink_cli.main.args = args = Mock()
-            args.output = None
-            args.stdout = None
-            args.record = tmpfile.name
-            args.record_and_pipe = None
-            args.title = None
-            args.player = "mpv"
-            args.player_args = ""
-            args.player_fifo = None
-            self.assertIsInstance(create_output(FakePlugin), PlayerOutput)
-        finally:
-            tmpfile.close()
+        output = create_output(formatter)
+        self.assertEqual(mock_check_file_output.call_args_list, [call("foo", False)])
+        self.assertIsInstance(output, FileOutput)
+        self.assertIsNone(output.filename)
+        self.assertIs(output.fd, stdout)
+        self.assertIsInstance(output.record, FileOutput)
+        self.assertEqual(output.record.filename, "foo")
+        self.assertIsNone(output.record.fd)
+        self.assertIsNone(output.record.record)
+
+    @patch("streamlink_cli.main.args")
+    @patch("streamlink_cli.main.check_file_output")
+    @patch("streamlink_cli.main.DEFAULT_STREAM_METADATA", {"title": "bar"})
+    def test_create_output_record(self, mock_check_file_output, args):
+        # type: (Mock, Mock)
+        formatter = Formatter({
+            "author": lambda: "foo"
+        })
+        mock_check_file_output.side_effect = lambda path, force: FileOutput(path)
+        args.output = None
+        args.stdout = None
+        args.record = "foo"
+        args.record_and_pipe = None
+        args.force = False
+        args.fs_safe_rules = None
+        args.title = None
+        args.url = "URL"
+        args.player = "mpv"
+        args.player_args = ""
+        args.player_fifo = None
+        args.player_http = None
+
+        output = create_output(formatter)
+        self.assertIsInstance(output, PlayerOutput)
+        self.assertEqual(output.title, "URL")
+        self.assertIsInstance(output.record, FileOutput)
+        self.assertEqual(output.record.filename, "foo")
+        self.assertIsNone(output.record.fd)
+        self.assertIsNone(output.record.record)
+
+        args.title = "{author} - {title}"
+        output = create_output(formatter)
+        self.assertIsInstance(output, PlayerOutput)
+        self.assertEqual(output.title, "foo - bar")
+        self.assertIsInstance(output.record, FileOutput)
+        self.assertEqual(output.record.filename, "foo")
+        self.assertIsNone(output.record.fd)
+        self.assertIsNone(output.record.record)
 
     def test_create_output_record_and_other_file_output(self):
         streamlink_cli.main.console = console = Mock()
@@ -265,20 +340,46 @@ class TestCLIMain(unittest.TestCase):
         console.exit.assert_called_with("Cannot use record options with other file output options.")
 
 
+class TestCLIMainOutputStream(unittest.TestCase):
+    @patch("streamlink_cli.main.args", Mock(retry_open=2))
+    @patch("streamlink_cli.main.log")
+    @patch("streamlink_cli.main.console")
+    def test_stream_failure_no_output_open(self, mock_console, mock_log):
+        # type: (Mock, Mock)
+        output = Mock()
+        stream = Mock(
+            __str__=lambda _: "fake-stream",
+            open=Mock(side_effect=StreamError("failure"))
+        )
+        formatter = Formatter({})
+
+        with patch("streamlink_cli.main.output", Mock()), \
+             patch("streamlink_cli.main.create_output", return_value=output):
+            output_stream(formatter, stream, True)
+
+        self.assertEqual(mock_log.error.call_args_list, [
+            call("Try 1/2: Could not open stream fake-stream (Could not open stream: failure)"),
+            call("Try 2/2: Could not open stream fake-stream (Could not open stream: failure)"),
+        ])
+        self.assertEqual(mock_console.exit.call_args_list, [
+            call("Could not open stream fake-stream, tried 2 times, exiting")
+        ])
+        self.assertFalse(output.open.called, "Does not open the output on stream error")
+
+
 class _TestCLIMainLogging(unittest.TestCase):
     @classmethod
     def subject(cls, argv):
         session = Streamlink()
         session.load_plugins(os.path.join(os.path.dirname(__file__), "plugin"))
 
-        def _log_current_arguments(*args, **kwargs):
-            log_current_arguments(*args, **kwargs)
-            raise SystemExit
+        # stop test execution at the setup_signals() call, as we're not interested in what comes afterwards
+        class StopTest(Exception):
+            pass
 
         with patch("streamlink_cli.main.streamlink", session), \
-             patch("streamlink_cli.main.log_current_arguments", side_effect=_log_current_arguments), \
+             patch("streamlink_cli.main.setup_signals", side_effect=StopTest), \
              patch("streamlink_cli.main.CONFIG_FILES", ["/dev/null"]), \
-             patch("streamlink_cli.main.setup_signals"), \
              patch("streamlink_cli.main.setup_streamlink"), \
              patch("streamlink_cli.main.setup_plugins"), \
              patch("streamlink_cli.main.setup_http_session"), \
@@ -287,7 +388,7 @@ class _TestCLIMainLogging(unittest.TestCase):
             mock_argv.__getitem__.side_effect = lambda x: argv[x]
             try:
                 streamlink_cli.main.main()
-            except SystemExit:
+            except StopTest:
                 pass
 
     def tearDown(self):
@@ -400,3 +501,78 @@ class TestCLIMainLoggingLogfile(_TestCLIMainLogging):
         self.assertEqual(streamlink_cli.main.console.output, sys.stdout)
         self.assertFalse(mock_open.called)
         self.assertEqual(mock_stdout.write.mock_calls, [call("bar\n")])
+
+
+class TestCLIMainPrint(unittest.TestCase):
+    def subject(self):
+        with patch.object(Streamlink, "load_builtin_plugins"), \
+             patch.object(Streamlink, "resolve_url") as mock_resolve_url, \
+             patch.object(Streamlink, "resolve_url_no_redirect") as mock_resolve_url_no_redirect:
+            session = Streamlink()
+            session.load_plugins(os.path.join(os.path.dirname(__file__), "plugin"))
+            with patch("streamlink_cli.main.streamlink", session), \
+                 patch("streamlink_cli.main.CONFIG_FILES", []), \
+                 patch("streamlink_cli.main.setup_streamlink"), \
+                 patch("streamlink_cli.main.setup_plugins"), \
+                 patch("streamlink_cli.main.setup_http_session"), \
+                 patch("streamlink_cli.main.setup_signals"), \
+                 patch("streamlink_cli.main.setup_options") as mock_setup_options:
+                with self.assertRaises(SystemExit) as cm:
+                    streamlink_cli.main.main()
+                self.assertEqual(cm.exception.code, 0)
+                mock_resolve_url.assert_not_called()
+                mock_resolve_url_no_redirect.assert_not_called()
+                mock_setup_options.assert_not_called()
+
+    @staticmethod
+    def get_stdout(mock_stdout):
+        return "".join([call_arg[0][0] for call_arg in mock_stdout.write.call_args_list])
+
+    @patch("sys.stdout")
+    @patch("sys.argv", ["streamlink"])
+    def test_print_usage(self, mock_stdout):
+        self.subject()
+        self.assertEqual(
+            self.get_stdout(mock_stdout),
+            "usage: streamlink [OPTIONS] <URL> [STREAM]\n\n"
+            + "Use -h/--help to see the available options or read the manual at https://streamlink.github.io\n"
+        )
+
+    @patch("sys.stdout")
+    @patch("sys.argv", ["streamlink", "--help"])
+    def test_print_help(self, mock_stdout):
+        self.subject()
+        output = self.get_stdout(mock_stdout)
+        self.assertIn(
+            "usage: streamlink [OPTIONS] <URL> [STREAM]",
+            output
+        )
+        self.assertIn(
+            dedent("""
+                Streamlink is a command-line utility that extracts streams from various
+                services and pipes them into a video player of choice.
+            """),
+            output
+        )
+        self.assertIn(
+            dedent("""
+                For more in-depth documentation see:
+                  https://Billy2011.github.io/streamlink-27
+
+                Please report broken plugins or bugs to the issue tracker on Github:
+                  https://github.com/streamlink/streamlink/issues
+            """),
+            output
+        )
+
+    @patch("sys.stdout")
+    @patch("sys.argv", ["streamlink", "--plugins"])
+    def test_print_plugins(self, mock_stdout):
+        self.subject()
+        self.assertEqual(self.get_stdout(mock_stdout), "Loaded plugins: testplugin\n")
+
+    @patch("sys.stdout")
+    @patch("sys.argv", ["streamlink", "--plugins", "--json"])
+    def test_print_plugins_json(self, mock_stdout):
+        self.subject()
+        self.assertEqual(self.get_stdout(mock_stdout), """[\n  "testplugin"\n]\n""")

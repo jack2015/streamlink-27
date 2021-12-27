@@ -10,7 +10,7 @@ from streamlink.utils.args import (
 )
 from streamlink.utils.times import hours_minutes_seconds
 from streamlink_cli.constants import (
-    DEFAULT_STREAM_METADATA, PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK, STREAM_PASSTHROUGH, SUPPORTED_PLAYERS
+    PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK, STREAM_PASSTHROUGH, SUPPORTED_PLAYERS
 )
 from streamlink_cli.utils import find_default_player
 
@@ -511,73 +511,26 @@ def build_parser():
         "-t", "--title",
         metavar="TITLE",
         help="""
-        This option allows you to supply a title to be displayed in the
-        title bar of the window that the video player is launched in.
+        Change the title of the video player's window.
 
-        This value can contain formatting variables surrounded by curly braces,
-        {{ and }}. If you need to include a brace character, it can be escaped
-        by doubling, e.g. {{{{ and }}}}.
+        Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables.
 
-        This option is only supported for the following players: {0}.
+        This option is only supported for the following players: {0}
 
         VLC specific information:
-            VLC has certain codes you can use inside your title.
-            These are accessible inside --title by using a backslash
-            before the dollar sign VLC uses to denote a format character.
-
-            e.g. to put the current date in your VLC window title,
-            the string "\\$A" could be inserted inside your --title string.
-
-            A full list of the format codes VLC uses is available here:
+            VLC does support special formatting variables on its own:
             https://wiki.videolan.org/Documentation:Format_String/
 
-        mpv specific information:
-            mpv has certain codes you can use inside your title.
-            These are accessible inside --title by using a backslash
-            before the dollar sign mpv uses to denote a format character.
+            These variables are accessible in the --title option by adding a backslash
+            in front of the dollar sign which VLC uses as its formatting character.
 
-            e.g. to put the current version of mpv running inside your
-            mpv window title, the string "\\${{{{mpv-version}}}}" could be
-            inserted inside your --title string.
+            For example, to put the current date in your VLC window title,
+            the string "\\\\$A" could be inserted inside the --title string.
 
-            A full list of the format codes mpv uses is available here:
-            https://mpv.io/manual/stable/#property-list
+        Example:
 
-        Formatting variables available to use in --title:
-
-        {{title}}
-            If available, this is the title of the stream.
-            Otherwise, it is the string "{1}"
-
-        {{author}}
-            If available, this is the author of the stream.
-            Otherwise, it is the string "{2}"
-
-        {{category}}
-            If available, this is the category the stream has been placed into.
-
-            - For Twitch, this is the game being played
-            - For YouTube, it's the category e.g. Gaming, Sports, Music...
-
-            Otherwise, it is the string "{3}"
-
-        {{game}}
-            This is just a synonym for {{category}} which may make more sense for
-            gaming oriented platforms. "Game being played" is a way to categorize
-            the stream, so it doesn't need its own separate handling.
-
-        {{url}}
-            URL of the stream.
-
-        Examples:
-
-            %(prog)s -p vlc --title "{{title}} -!- {{author}} -!- {{category}} \\$A" <url> [stream]
-            %(prog)s -p mpv --title "{{title}} -- {{author}} -- {{category}} -- (\\${{{{mpv-version}}}})" <url> [stream]
-
-        """.format(', '.join(sorted(SUPPORTED_PLAYERS.keys())),
-                   DEFAULT_STREAM_METADATA['title'],
-                   DEFAULT_STREAM_METADATA['author'],
-                   DEFAULT_STREAM_METADATA['category'])
+            %(prog)s -p mpv --title "{{author}} - {{category}} - {{title}}" <URL> [STREAM]
+        """.format(', '.join(sorted(SUPPORTED_PLAYERS.keys())))
     )
 
     output = parser.add_argument_group("File output options")
@@ -588,6 +541,14 @@ def build_parser():
         Write stream data to FILENAME instead of playing it.
 
         You will be prompted if the file already exists.
+
+        Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables.
+
+        Unsupported characters in substituted variables will be replaced with an underscore.
+
+        Example:
+
+            %(prog)s --output "~/recordings/{author}/{category}/{id}-{time:%%Y%%m%%d%%H%%M%%S}.ts" <URL> [STREAM]
         """
     )
     output.add_argument(
@@ -619,6 +580,14 @@ def build_parser():
         Open the stream in the player, while at the same time writing it to FILENAME.
 
         You will be prompted if the file already exists.
+
+        Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables.
+
+        Unsupported characters in substituted variables will be replaced with an underscore.
+
+        Example:
+
+            %(prog)s --record "~/recordings/{author}/{category}/{id}-{time:%%Y%%m%%d%%H%%M%%S}.ts" <URL> [STREAM]
         """
     )
     output.add_argument(
@@ -628,6 +597,33 @@ def build_parser():
         Write stream data to stdout, while at the same time writing it to FILENAME.
 
         You will be prompted if the file already exists.
+
+        Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables.
+
+        Unsupported characters in substituted variables will be replaced with an underscore.
+
+        Example:
+
+            %(prog)s --record-and-pipe "~/recordings/{author}/{category}/{id}-{time:%%Y%%m%%d%%H%%M%%S}.ts" <URL> [STREAM]
+        """
+    )
+    output.add_argument(
+        "--fs-safe-rules",
+        choices=["POSIX", "Windows"],
+        type=str,
+        help="""
+        The rules used to make formatting variables filesystem-safe are chosen
+        automatically according to the type of system in use. This overrides
+        the automatic detection.
+
+        Intended for use when Streamlink is running on a UNIX-like OS but writing
+        to Windows filesystems such as NTFS; USB devices using VFAT or exFAT; CIFS
+        shares that are enforcing Windows filename limitations, etc.
+
+        These characters are replaced with an underscore for the rules in use:
+
+          POSIX  : \\x00-\\x1F /
+          Windows: \\x00-\\x1F \\x7F " * / : < > ? \\ |
         """
     )
 
