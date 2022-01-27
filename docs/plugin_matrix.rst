@@ -10,7 +10,6 @@ is limited.
 Name                    URL(s)               Live  VOD   Notes
 ======================= ==================== ===== ===== ===========================
 abematv                 abema.tv             Yes   Yes   Streams are geo-restricted to Japan.
-abweb                   abweb.com            Yes   No    Requires a login and a subscription.
 adultswim               adultswim.com        Yes   Yes   Streams may be geo-restricted, some VOD streams are protected by DRM.
 afreeca                 play.afreecatv.com   Yes   No
 albavision              - antena7.com.do     Yes   No    Some streams are geo-restricted.
@@ -99,7 +98,6 @@ huya                    huya.com             Yes   No
 idf1                    idf1.fr              Yes   Yes
 invintus                player.invintus.com  Yes   Yes
 kugou                   fanxing.kugou.com    Yes   --
-latina                  latina.pe            Yes   No    Streams may be geo-restricted to Peru.
 linelive                live.line.me         Yes   Yes
 livespotting            livespotting.tv      Yes   No
 livestream              livestream.com       Yes   --
