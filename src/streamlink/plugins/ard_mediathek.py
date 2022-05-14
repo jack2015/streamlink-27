@@ -1,3 +1,11 @@
+"""
+$description Live TV channels and video on-demand service from ARD, a German public, independent broadcaster.
+$url ardmediathek.de
+$url mediathek.daserste.de
+$type live, vod
+$region Germany
+"""
+
 import logging
 import re
 

@@ -1,3 +1,9 @@
+"""
+$description Social platform delivering live broadcasts on diverse topics, from politics and music to entertainment.
+$url 17app.co
+$type live
+"""
+
 import logging
 import re
 

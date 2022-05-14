@@ -1,3 +1,9 @@
+"""
+$description Global video hosting platform.
+$url streamable.com
+$type vod
+"""
+
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher

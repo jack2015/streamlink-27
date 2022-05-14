@@ -1,3 +1,10 @@
+"""
+$description Live TV channels and video on-demand service from RTVE, a Spanish public, state-owned broadcaster.
+$url rtve.es
+$type live, vod
+$region Spain
+"""
+
 import base64
 import logging
 import re
@@ -14,7 +21,7 @@ from streamlink.stream.http import HTTPStream
 log = logging.getLogger(__name__)
 
 
-class ZTNRClient:
+class ZTNRClient(object):
     base_url = "https://ztnr.rtve.es/ztnr/res/"
     block_size = 16
 
@@ -103,7 +110,7 @@ class Rtve(Plugin):
     )
 
     def __init__(self, url):
-        super().__init__(url)
+        super(Rtve, self).__init__(url)
         self.zclient = ZTNRClient(self.secret_key, self.session)
 
     def _get_subtitles(self, content_id):

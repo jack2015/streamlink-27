@@ -1,3 +1,11 @@
+"""
+$description Live TV channels and video on-demand service from france.tv, a French public, state-owned broadcaster.
+$url france.tv
+$url francetvinfo.fr
+$type live, vod
+$region France, Andorra, Monaco
+"""
+
 import logging
 import re
 from datetime import datetime
@@ -98,7 +106,7 @@ class Pluzz(Plugin):
             validate.parse_json(),
             {
                 "video": {
-                    "workflow": "token-akamai",
+                    "workflow": validate.any("token-akamai", "dai"),
                     "format": validate.any("dash", "hls"),
                     "token": validate.url(),
                     "url": validate.url()

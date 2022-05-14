@@ -1,3 +1,9 @@
+"""
+$description Japanese live streaming and video hosting social platform.
+$url live.line.me
+$type live, vod
+"""
+
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher
@@ -9,7 +15,7 @@ from streamlink.stream.hls import HLSStream
     r"https?://live\.line\.me/channels/(?P<channel>\d+)/broadcast/(?P<broadcast>\d+)"
 ))
 class LineLive(Plugin):
-    _api_url = "https://live-api.line-apps.com/app/v3.2/channel/{0}/broadcast/{1}/player_status"
+    _api_url = "https://live-api.line-apps.com/web/v4.0/channel/{0}/broadcast/{1}/player_status"
 
     _player_status_schema = validate.Schema(
         {

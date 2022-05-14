@@ -1,3 +1,9 @@
+"""
+$description Turkish web conferencing platform.
+$url web.tv
+$type live
+"""
+
 import base64
 import binascii
 import logging

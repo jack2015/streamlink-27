@@ -1,3 +1,9 @@
+"""
+$description Current affairs and cultural channel owned by NHK, a Japanese public, state-owned broadcaster.
+$url nhk.or.jp/nhkworld
+$type live
+"""
+
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher

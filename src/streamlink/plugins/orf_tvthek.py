@@ -1,3 +1,9 @@
+"""
+$description Live TV channels and video on-demand service from ORF, an Austrian public, state-owned broadcaster.
+$url tvthek.orf.at
+$type live, vod
+"""
+
 import json
 import re
 

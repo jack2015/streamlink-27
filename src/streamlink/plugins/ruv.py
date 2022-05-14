@@ -1,4 +1,9 @@
-"""Plugin for RUV, the Icelandic national television."""
+"""
+$description Live TV channels and video on-demand service from RUV, an Icelandic public, state-owned broadcaster.
+$url ruv.is
+$type live, vod
+$region Iceland
+"""
 
 import re
 
@@ -39,7 +44,7 @@ _multi_re = re.compile(r"""(?P<base_url>http://[0-9a-zA-Z\-\.]*/
 """, re.VERBOSE))
 class Ruv(Plugin):
     def __init__(self, url):
-        super().__init__(url)
+        super(Ruv, self).__init__(url)
 
         self.live = self.matches[0] is not None
         if self.live:

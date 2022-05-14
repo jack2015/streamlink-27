@@ -1,3 +1,10 @@
+"""
+$description US live TV channels. OTT service from USTVnow.
+$url ustvnow.com
+$type live
+$account Required, additional subscription required by some streams
+"""
+
 from __future__ import unicode_literals
 
 import base64

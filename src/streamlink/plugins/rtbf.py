@@ -1,3 +1,11 @@
+"""
+$description Live TV channels and video on-demand service from RTBF, a Belgian public broadcaster.
+$url rtbf.be/auvio
+$url rtbfradioplayer.be
+$type live, vod
+$region Belgium, Europe
+"""
+
 import datetime
 import logging
 import re

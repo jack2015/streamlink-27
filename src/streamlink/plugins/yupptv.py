@@ -1,3 +1,10 @@
+"""
+$description Indian live TV channels and video on-demand service. OTT service from YuppTV.
+$url yupptv.com
+$type live, vod
+$account Some streams require an account and subscription
+"""
+
 import logging
 import re
 import time

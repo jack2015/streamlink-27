@@ -164,7 +164,7 @@ Unix-like (POSIX) - $XDG_CONFIG_HOME/streamlink/config\ **.twitch**
 Windows           %APPDATA%\\streamlink\\streamlinkrc\ **.youtube**
 ================= ====================================================
 
-Have a look at the :ref:`list of plugins <plugin_matrix:Plugins>`, or
+Have a look at the :ref:`list of plugins <plugins:Plugins>`, or
 check the :option:`--plugins` option to see the name of each built-in plugin.
 
 
@@ -285,6 +285,9 @@ When passing parameters to the built-in stream plugins, the values will either
 be treated as plain strings, as is the case in the example above for ``swfVry``,
 or they will be interpreted as Python literals. For example, you can pass a
 Python dict or Python list as one of the parameters.
+
+Depending on the input URL, the explicit protocol scheme may be omitted.
+The following example shows HLS streams (``.m3u8``) and DASH streams (``.mpd``):
 
 .. code-block:: console
 

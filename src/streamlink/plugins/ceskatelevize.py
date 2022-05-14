@@ -1,3 +1,10 @@
+"""
+$description Live TV channels from CT, a Czech public, state-owned broadcaster.
+$url ceskatelevize.cz
+$type live
+$region Czechia
+"""
+
 import logging
 import re
 

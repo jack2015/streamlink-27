@@ -1,3 +1,11 @@
+"""
+$description Live TV channel and video on-demand service from TV5Monde, a French free-to-air broadcaster.
+$url tv5monde.com
+$url tivi5mondeplus.com
+$type live, vod
+$region France, Belgium, Switzerland
+"""
+
 import re
 
 from streamlink.compat import urlparse

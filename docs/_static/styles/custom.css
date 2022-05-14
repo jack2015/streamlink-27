@@ -44,12 +44,32 @@ code.literal {
   font-size: var(--font-size--small);
 }
 
+code.literal.xref.std-option {
+  white-space: nowrap;
+}
+
 strong.command {
   padding: .1em .2em;
   border-radius: .2em;
   background: var(--color-background-secondary);
   color: var(--color-api-name);
   font: normal var(--font-size--small) var(--font-stack--monospace);
+}
+
+a[href^="http://"],
+a[href^="https://"]:not([href^="https://billy2011.github.io/streamlink-27/"]) {
+  display: inline-block;
+  word-break: break-word;
+}
+
+a[href^="http://"],
+a[href^="https://"]:not([href^="https://billy2011.github.io/streamlink-27/"])::after {
+  content: "\f35d";
+  display: inline-block;
+  padding-left: .4em;
+  font: 900 .6em "Font Awesome 5 Free";
+  vertical-align: middle;
+  text-decoration: none;
 }
 
 /*
@@ -232,6 +252,26 @@ table.table-custom-layout.table-custom-layout-platform-locations code {
   margin: 0 1rem 1rem 0;
 }
 .github-avatar + .container > ul > li {
+  list-style: none;
+}
+
+section#plugins dl.field-list {
+  margin: 0 0 0 1rem;
+}
+section#plugins dl.field-list > dt {
+  float: left;
+  width: 8rem;
+  margin: 0;
+}
+section#plugins dl.field-list > dd {
+  margin: 0 0 0 8rem;
+}
+section#plugins dl.field-list ul,
+section#plugins dl.field-list p {
+  margin: 0;
+  padding: 0;
+}
+section#plugins dl.field-list li {
   list-style: none;
 }
 

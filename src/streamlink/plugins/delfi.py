@@ -1,3 +1,11 @@
+"""
+$description Internet portal in Estonia, Latvia, and Lithuania providing daily news, ranging from gardening to politics.
+$url delfi.lt
+$url delfi.ee
+$url delfi.lv
+$type vod
+"""
+
 import itertools
 import logging
 import re

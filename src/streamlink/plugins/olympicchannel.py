@@ -1,3 +1,11 @@
+"""
+$description Live TV channel and video on-demand service run by the International Olympic Committee.
+$url olympicchannel.com
+$url olympics.com
+$type live, vod
+$notes Only non-premium content is available
+"""
+
 import logging
 import re
 from time import time

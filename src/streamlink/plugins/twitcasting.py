@@ -1,3 +1,9 @@
+"""
+$description Global live broadcasting and live broadcast archiving social platform.
+$url twitcasting.tv
+$type live
+"""
+
 import hashlib
 import logging
 import re
@@ -6,8 +12,7 @@ from streamlink.buffers import RingBuffer
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.websocket import WebsocketClient
-from streamlink.stream.stream import Stream
-from streamlink.stream.stream import StreamIO
+from streamlink.stream.stream import Stream, StreamIO
 from streamlink.utils.url import update_qsd
 
 log = logging.getLogger(__name__)
@@ -141,8 +146,8 @@ class TwitCastingStream(Stream):
         super(TwitCastingStream, self).__init__(session)
         self.url = url
 
-    def __repr__(self):
-        return "<TwitCastingStream({0!r})>".format(self.url)
+    def to_url(self):
+        return self.url
 
     def open(self):
         reader = TwitCastingReader(self)

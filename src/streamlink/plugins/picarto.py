@@ -1,4 +1,8 @@
-from __future__ import print_function
+"""
+$description Global live streaming and video hosting platform for the creative community.
+$url picarto.tv
+$type live, vod
+"""
 
 import logging
 import re

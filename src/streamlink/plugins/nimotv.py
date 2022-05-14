@@ -1,3 +1,9 @@
+"""
+$description Chinese, global live streaming platform run by Huya Live.
+$url nimo.tv
+$type live
+"""
+
 import logging
 import re
 

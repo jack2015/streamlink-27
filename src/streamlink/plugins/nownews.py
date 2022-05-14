@@ -1,3 +1,9 @@
+"""
+$description Live streaming news channel owned by Now/PCCW Group, based in Hong Kong.
+$url news.now.com
+$type live
+"""
+
 import json
 import logging
 import re

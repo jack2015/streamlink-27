@@ -1,3 +1,11 @@
+"""
+$description Live TV channels from MTVA, a Hungarian public, state-owned broadcaster.
+$url mediaklikk.hu
+$url m4sport.hu
+$type live
+$region Hungary
+"""
+
 import logging
 import re
 

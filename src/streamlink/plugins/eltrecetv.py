@@ -1,3 +1,10 @@
+"""
+$description Argentine live TV channel and video on-demand service owned by El Trece Network.
+$url eltrecetv.com.ar
+$type live, vod
+$region Argentina
+"""
+
 import logging
 import re
 

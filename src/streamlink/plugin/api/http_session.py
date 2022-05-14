@@ -1,12 +1,16 @@
+import ssl
 import time
 try:
-    from typing import Any, Callable, List, Pattern, Tuple
+    from typing import Any, Callable, Dict, List, Pattern, Tuple
 except ImportError:
     pass
 
+import requests
+# noinspection PyPackageRequirements
 import urllib3
-from requests import Session
+from requests import PreparedRequest, Request, Session
 
+from streamlink.compat import is_py3
 from streamlink.exceptions import PluginError
 from streamlink.packages.requests_file import FileAdapter
 from streamlink.plugin.api import useragents
@@ -14,18 +18,6 @@ from streamlink.utils.parse import parse_json, parse_xml
 
 
 urllib3_version = tuple(map(int, urllib3.__version__.split(".")[:3]))
-
-
-try:
-    from requests.packages import urllib3
-
-    # We tell urllib3 to disable warnings about unverified HTTPS requests,
-    # because in some plugins we have to do unverified requests intentionally.
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-except (ImportError, AttributeError):
-    pass
-
-__all__ = ["HTTPSession"]
 
 
 # Never convert percent-encoded characters to uppercase in urllib3>=1.25.4.
@@ -78,6 +70,10 @@ def _parse_keyvalue_list(val):
             yield key.strip(), value.strip()
         except ValueError:
             continue
+
+
+# requests.Request.__init__ keywords, except for "hooks"
+_VALID_REQUEST_ARGS = "method", "url", "headers", "files", "data", "params", "auth", "cookies", "json"
 
 
 class HTTPSession(Session):
@@ -154,6 +150,20 @@ class HTTPSession(Session):
         """Resolves any redirects and returns the final URL."""
         return self.get(url, stream=True).url
 
+    @staticmethod
+    def valid_request_args(**req_keywords):
+        # type: () -> Dict
+        return {k: v for k, v in req_keywords.items() if k in _VALID_REQUEST_ARGS}
+
+    def prepare_new_request(self, **req_keywords):
+        # type: () -> PreparedRequest
+        valid_args = self.valid_request_args(**req_keywords)
+        valid_args.setdefault("method", "GET")
+        request = Request(**valid_args)
+
+        # prepare request with the session context, which might add params, headers, cookies, etc.
+        return self.prepare_request(request)
+
     def request(self, method, url, *args, **kwargs):
         acceptable_status = kwargs.pop("acceptable_status", [])
         exception = kwargs.pop("exception", PluginError)
@@ -202,3 +212,17 @@ class HTTPSession(Session):
             res = schema.validate(res.text, name="response text", exception=PluginError)
 
         return res
+
+
+if is_py3:
+    class TLSSecLevel1Adapter(requests.adapters.HTTPAdapter):
+        def init_poolmanager(self, *args, **kwargs):
+            ctx = ssl.create_default_context()
+            ctx.set_ciphers("DEFAULT:@SECLEVEL=1")
+            kwargs["ssl_context"] = ctx
+            return super().init_poolmanager(*args, **kwargs)
+else:
+    class TLSSecLevel1Adapter(object):
+        pass
+
+__all__ = ["HTTPSession", "TLSSecLevel1Adapter"]

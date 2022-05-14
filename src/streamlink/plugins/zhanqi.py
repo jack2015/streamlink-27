@@ -1,3 +1,9 @@
+"""
+$description Chinese live streaming platform for live video game broadcasts.
+$url zhanqi.tv
+$type live
+"""
+
 import logging
 import re
 

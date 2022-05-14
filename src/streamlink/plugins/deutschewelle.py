@@ -1,3 +1,9 @@
+"""
+$description Live TV channels and video on-demand service from Deutsche Welle, a German public, state-owned broadcaster.
+$url dw.com
+$type live, vod
+"""
+
 import logging
 import re
 

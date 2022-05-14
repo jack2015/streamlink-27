@@ -1,3 +1,9 @@
+"""
+$description French television news network, covering world news from the European perspective.
+$url euronews.com
+$type live
+"""
+
 import re
 
 from streamlink.compat import urlparse

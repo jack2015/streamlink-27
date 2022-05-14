@@ -1,3 +1,10 @@
+"""
+$description Live TV channels from DR, a Danish public, state-owned broadcaster.
+$url dr.dk
+$type live
+$region Denmark
+"""
+
 import logging
 import re
 

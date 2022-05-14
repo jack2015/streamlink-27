@@ -1,3 +1,10 @@
+"""
+$description South Korean live streaming social platform with a focus on celebrities.
+$url vlive.tv
+$type live
+$notes Embedded Naver VODs are not supported
+"""
+
 import logging
 import re
 

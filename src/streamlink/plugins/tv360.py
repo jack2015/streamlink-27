@@ -1,3 +1,9 @@
+"""
+$description A privately owned Turkish live TV channel.
+$url tv360.com.tr
+$type live
+"""
+
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher

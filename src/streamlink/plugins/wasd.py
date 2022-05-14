@@ -1,3 +1,9 @@
+"""
+$description Russian live streaming social platform.
+$url wasd.tv
+$type live
+"""
+
 import logging
 import re
 

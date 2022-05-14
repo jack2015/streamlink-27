@@ -1,3 +1,10 @@
+"""
+$description Global live streaming and video on-demand platform owned by IBM.
+$url ustream.tv
+$url video.ibm.com
+$type live, vod
+"""
+
 import copy
 import logging
 import re

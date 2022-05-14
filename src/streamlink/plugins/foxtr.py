@@ -1,4 +1,8 @@
-from __future__ import print_function
+"""
+$description Turkish live TV channel owned by Fox Network.
+$url fox.com.tr
+$type live
+"""
 
 import re
 

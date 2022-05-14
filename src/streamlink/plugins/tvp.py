@@ -1,3 +1,10 @@
+"""
+$description Live TV channels from TVP, a Polish public, state-owned broadcaster.
+$url tvpstream.vod.tvp.pl
+$type live
+$region Poland
+"""
+
 import logging
 import re
 

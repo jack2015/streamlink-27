@@ -1,3 +1,10 @@
+"""
+$description Television channel dedicated to electronic music, DJs and dance music culture.
+$url clubbingtv.com
+$type live, vod
+$account Login required
+"""
+
 import logging
 import re
 

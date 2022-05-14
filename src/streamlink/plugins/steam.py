@@ -1,3 +1,11 @@
+"""
+$description Live streaming video game broadcasts from the Steam gaming community.
+$url steamcommunity.com
+$url steam.tv
+$type live
+$account Some streams require a login
+"""
+
 import base64
 import logging
 import re

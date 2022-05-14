@@ -1,4 +1,9 @@
-from __future__ import print_function
+"""
+$description Live and on-demand video service from World Wrestling Entertainment, Inc.
+$url network.wwe.com
+$type live, vod
+$account Required
+"""
 
 import json
 import logging

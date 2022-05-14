@@ -1,3 +1,10 @@
+"""
+$description Live TV channels from RAI, an Italian public, state-owned broadcaster.
+$url raiplay.it
+$type live
+$region Italy
+"""
+
 import logging
 import re
 

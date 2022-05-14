@@ -1,3 +1,9 @@
+"""
+$description TV and live video game broadcasts, artist performances and personal daily-life video blogs & shows.
+$url play.afreecatv.com
+$type live
+"""
+
 import logging
 import re
 

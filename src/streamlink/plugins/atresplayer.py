@@ -1,4 +1,9 @@
-from __future__ import print_function
+"""
+$description Spanish live TV channels from Atresmedia Television, including Antena 3 and laSexta.
+$url atresplayer.com
+$type live
+$region Spain
+"""
 
 import logging
 import re

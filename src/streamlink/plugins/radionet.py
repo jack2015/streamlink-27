@@ -1,3 +1,18 @@
+"""
+$description Global and country-specific websites for live radio simulcasts for over 40,000 stations.
+$url radio.net
+$url radio.at
+$url radio.de
+$url radio.dk
+$url radio.es
+$url radio.fr
+$url radio.it
+$url radio.pl
+$url radio.pt
+$url radio.se
+$type live
+"""
+
 import logging
 import re
 

@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+$description Russian live streaming and video hosting social platform.
+$url ok.ru
+$type live, vod
+"""
+
 import logging
 import re
 
@@ -35,7 +41,7 @@ class OKru(Plugin):
         if weight:
             return weight, "okru"
 
-        return super().stream_weight(key)
+        return super(OKru, cls).stream_weight(key)
 
     def _get_streams(self):
         schema_metadata = validate.Schema(

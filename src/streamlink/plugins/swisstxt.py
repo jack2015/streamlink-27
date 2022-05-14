@@ -1,4 +1,10 @@
-from __future__ import print_function
+"""
+$description Live TV channels from RSI and SRF, operations of SRG SSR, a Swiss public broadcaster.
+$url srf.ch
+$url rsi.ch
+$type live
+$region Switzerland
+"""
 
 import logging
 import re

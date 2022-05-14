@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+$description Russian live streaming and video hosting social platform.
+$url vk.com
+$type live, vod
+"""
+
 import logging
 import re
 

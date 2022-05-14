@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
+"""
+$description Global live streaming and video hosting social platform owned by Amazon.
+$url twitch.tv
+$type live, vod
+$notes Low latency streaming is supported
+"""
+
 import json
 import logging
 import re
 from collections import namedtuple
 from random import random
-
-import requests
 
 from streamlink.compat import str, urlparse
 from streamlink.exceptions import NoStreamsError, PluginError
@@ -172,8 +177,7 @@ class UsherService(object):
         }
         params.update(extra_params)
 
-        req = requests.Request("GET", url, params=params)
-        req = self.session.http.prepare_request(req)
+        req = self.session.http.prepare_new_request(url=url, params=params)
 
         return req.url
 
@@ -454,7 +458,7 @@ class TwitchAPI:
         |
         (?P<channel>[^/?]+)
         (?:
-            /video/(?P<video_id>\d+)
+            /v(?:ideo)?/(?P<video_id>\d+)
             |
             /clip/(?P<clip_name>[^/?]+)
         )?

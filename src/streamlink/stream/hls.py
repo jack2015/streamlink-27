@@ -117,7 +117,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
             log.error("Failed to open segment {0}: {1}", sequence.num, err)
             return
 
-    def write(self, sequence, res, chunk_size=8192):
+    def write(self, sequence, result, chunk_size=8192):
         if sequence.segment.key and sequence.segment.key.method != "NONE":
             try:
                 decryptor = self.create_decryptor(sequence.segment.key,
@@ -127,7 +127,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
                 self.close()
                 return
 
-            data = res.content
+            data = result.content
             # If the input data is not a multiple of 16, cut off any garbage
             garbage_len = len(data) % AES.block_size
             if garbage_len:
@@ -141,7 +141,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
             self.reader.buffer.write(chunk)
         else:
             try:
-                for chunk in res.iter_content(chunk_size):
+                for chunk in result.iter_content(chunk_size):
                     self.reader.buffer.write(chunk)
             except (ChunkedEncodingError, ContentDecodingError, ConnectionError) as err:
                 log.error("Download of segment {0} failed ({1})".format(sequence.num, err))
@@ -341,6 +341,9 @@ class MuxedHLSStream(MuxedStream):
         self.url_master = url_master
 
     def to_manifest_url(self):
+        if self.url_master is None:
+            return super(MuxedHLSStream, self).to_manifest_url()
+
         return self.url_master
 
 
@@ -359,20 +362,17 @@ class HLSStream(HTTPStream):
     __reader__ = HLSStreamReader
 
     def __init__(self, session_, url, url_master=None, force_restart=False, start_offset=0, duration=None, **args):
-        HTTPStream.__init__(self, session_, url, **args)
+        super(HLSStream, self).__init__(session_, url, **args)
         self.url_master = url_master
         self.force_restart = force_restart
         self.start_offset = start_offset
         self.duration = duration
 
-    def __repr__(self):
-        return "<HLSStream({0!r}, {1!r})>".format(self.url, self.url_master)
-
     def __json__(self):
         json = HTTPStream.__json__(self)
 
         if self.url_master:
-            json["master"] = self.url_master
+            json["master"] = self.to_manifest_url()
 
         # Pretty sure HLS is GET only.
         del json["method"]
@@ -381,7 +381,13 @@ class HLSStream(HTTPStream):
         return json
 
     def to_manifest_url(self):
-        return self.url_master
+        if self.url_master is None:
+            return super(HLSStream, self).to_manifest_url()
+
+        args = self.args.copy()
+        args.update(url=self.url_master)
+
+        return self.session.http.prepare_new_request(**args).url
 
     def open(self):
         reader = self.__reader__(self)

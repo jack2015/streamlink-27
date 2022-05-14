@@ -1,3 +1,9 @@
+"""
+$description Polish live TV channel owned by Toya.
+$url tvtoya.pl
+$type live
+"""
+
 import logging
 import re
 

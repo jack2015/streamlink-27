@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+"""
+$description Live TV channels from SBS, a South Korean public broadcaster.
+$url play.sbs.co.kr
+$type live
+$region South Korea
+"""
+
 import logging
 import random
 import re

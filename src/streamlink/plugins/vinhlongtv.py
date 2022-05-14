@@ -1,3 +1,10 @@
+"""
+$description Vietnamese live TV channels from THVL, including THVL1, THVL2, THVL3 and THVL4.
+$url thvli.vn
+$type live
+$region Vietnam
+"""
+
 import logging
 import re
 

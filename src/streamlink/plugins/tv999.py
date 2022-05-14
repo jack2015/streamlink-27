@@ -1,3 +1,10 @@
+"""
+$description Turkish live TV channel owned by Detelina Media.
+$url tv999.bg
+$type live
+$region Bulgaria
+"""
+
 import logging
 import re
 

@@ -1,3 +1,10 @@
+"""
+$description Live TV channels from STV, a Scottish free-to-air broadcaster.
+$url player.stv.tv
+$type live
+$region United Kingdom
+"""
+
 import logging
 import re
 

@@ -1,3 +1,9 @@
+"""
+$description Live TV channels and video on-demand service from TVI, a Portuguese free-to-air broadcaster.
+$url tviplayer.iol.pt
+$type live, vod
+"""
+
 import logging
 import re
 

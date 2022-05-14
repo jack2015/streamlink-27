@@ -1,3 +1,9 @@
+"""
+$description Chinese live streaming platform for live video game broadcasts and individual live streams.
+$url huya.com
+$type live
+"""
+
 import base64
 import logging
 import re

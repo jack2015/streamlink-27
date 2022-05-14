@@ -1,3 +1,10 @@
+"""
+$description Japanese live radio simulcasts and time-shifted broadcasts for over 100 stations.
+$url radiko.jp
+$type live, vod
+$region Japan
+"""
+
 import base64
 import datetime
 import hashlib

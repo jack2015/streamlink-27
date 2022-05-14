@@ -1,3 +1,10 @@
+"""
+$description Israeli live TV channel and video on-demand service owned by Network 13.
+$url 13tv.co.il
+$type live, vod
+$region Israel
+"""
+
 import logging
 import re
 

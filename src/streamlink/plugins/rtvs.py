@@ -1,3 +1,10 @@
+"""
+$description Live TV channels from RTVS, a Slovak public, state-owned broadcaster.
+$url rtvs.sk
+$type live
+$region Slovakia
+"""
+
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher

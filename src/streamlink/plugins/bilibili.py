@@ -1,3 +1,9 @@
+"""
+$description Chinese video sharing website based in Shanghai, themed around animation, comics, and games (ACG).
+$url live.bilibili.com
+$type live
+"""
+
 import logging
 import re
 

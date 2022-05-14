@@ -1,3 +1,10 @@
+"""
+$description Live TV channels and video on-demand service from CCMA, a Catalan public, state-owned broadcaster.
+$url ccma.cat
+$type live, vod
+$region Spain
+"""
+
 import logging
 import re
 

@@ -1,3 +1,9 @@
+"""
+$description Live TV channels from VTV, a Vietnamese public, state-owned broadcaster.
+$url vtvgo.vn
+$type live
+"""
+
 import logging
 import re
 

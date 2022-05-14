@@ -1,3 +1,10 @@
+"""
+$description Russian live streaming platform hosting various Russian live TV channels.
+$url mediavitrina.ru
+$type live
+$region Russia
+"""
+
 import logging
 import re
 

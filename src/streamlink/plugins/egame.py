@@ -1,3 +1,9 @@
+"""
+$description Chinese live streaming platform for live video game broadcasts and individual live streams.
+$url egame.qq.com
+$type live
+"""
+
 import logging
 import re
 

@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+$description Global live streaming platform for the creative community.
+$url sketch.pixiv.net
+$type live
+"""
+
 from __future__ import unicode_literals
 
 import logging

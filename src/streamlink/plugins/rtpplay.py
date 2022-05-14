@@ -1,3 +1,10 @@
+"""
+$description Live TV channels and video on-demand service from RTP, a Portuguese public, state-owned broadcaster.
+$url rtp.pt/play
+$type live, vod
+$region Portugal
+"""
+
 import re
 from base64 import b64decode
 

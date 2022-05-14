@@ -1,3 +1,9 @@
+"""
+$description Global live streaming and video on-demand hosting platform.
+$url players.brightcove.net
+$type live, vod
+"""
+
 import logging
 import re
 

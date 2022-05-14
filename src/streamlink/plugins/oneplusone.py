@@ -1,3 +1,9 @@
+"""
+$description Ukrainian live TV channels from 1 + 1 Media group, including 1 + 1, 2 + 2, PLUSPLUS, TET and UNIAN.
+$url 1plus1.video
+$type live
+"""
+
 import logging
 import re
 from base64 import b64decode
@@ -67,7 +73,7 @@ class OnePlusOneAPI:
             url=self.url,
             schema=validate.Schema(
                 validate.parse_html(),
-                validate.xml_xpath_string(".//iframe[@src][@name='twttrHubFrameSecure']/@src")))
+                validate.xml_xpath_string(".//iframe[contains(@src,'embed')]/@src")))
         if not url_parts:
             raise NoStreamsError("Missing url_parts")
 

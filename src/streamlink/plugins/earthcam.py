@@ -1,3 +1,10 @@
+"""
+$description A network of live streaming webcams for tourism and entertainment.
+$url earthcam.com
+$type live, vod
+$notes Only works for the cams hosted on EarthCam
+"""
+
 import logging
 import re
 
