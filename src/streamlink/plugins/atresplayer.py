@@ -22,10 +22,12 @@ log = logging.getLogger(__name__)
     r"https?://(?:www\.)?atresplayer\.com/"
 ))
 class AtresPlayer(Plugin):
-    def _get_streams(self):
-        self.url = update_scheme("https://", self.url)
-        path = urlparse(self.url).path
+    def __init__(self, *args, **kwargs):
+        super(AtresPlayer, self).__init__(*args, **kwargs)
+        self.url = update_scheme("https://", "{0}/".format(self.url.rstrip('/')))
 
+    def _get_streams(self):
+        path = urlparse(self.url).path
         api_url = self.session.http.get(self.url, schema=validate.Schema(
             re.compile(r"""window.__PRELOADED_STATE__\s*=\s*({.*?});""", re.DOTALL),
             validate.none_or_all(
