@@ -30,7 +30,7 @@ class SBScokr(Plugin):
     _URL_API_CHANNEL = "https://apis.sbs.co.kr/play-api/1.0/onair{virtual}/channel/{channel}"
 
     def _get_streams(self):
-        channel = self.match["channel"]
+        channel = self.match.group("channel")
 
         for virtual in ("", "/virtual"):
             channels = self.session.http.get(
