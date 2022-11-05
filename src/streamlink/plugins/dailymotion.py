@@ -45,7 +45,9 @@ class DailyMotion(Plugin):
                         "error": {"title": validate.text},
                     },
                     {
-                        "owner.username": validate.text,
+                        "owner": {
+                            "username": validate.text,
+                        },
                         "title": validate.text,
                         "qualities": {
                             validate.text: [{
@@ -67,7 +69,7 @@ class DailyMotion(Plugin):
             return
 
         self.id = media_id
-        self.author = media["owner.username"]
+        self.author = media["owner"]["username"]
         self.title = media["title"]
 
         for quality, streams in media["qualities"].items():
