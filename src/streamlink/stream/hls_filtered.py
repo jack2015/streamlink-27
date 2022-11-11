@@ -12,6 +12,7 @@ class FilteredHLSStreamWriter(HLSStreamWriter):
 
     def write(self, sequence, result, *data):
         if not self.should_filter_sequence(sequence):
+            log.debug("Writing segment {0} to output".format(sequence.num))
             try:
                 return super(FilteredHLSStreamWriter, self).write(sequence, result, *data)
             finally:
@@ -20,6 +21,8 @@ class FilteredHLSStreamWriter(HLSStreamWriter):
                     log.info("Resuming stream output")
                     self.reader.filter_event.set()
         else:
+            log.debug("Discarding segment {0}".format(sequence.num))
+
             # Read and discard any remaining HTTP response data in the response connection.
             # Unread data in the HTTPResponse connection blocks the connection from being released back to the pool.
             result.raw.drain_conn()
