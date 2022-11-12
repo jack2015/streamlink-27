@@ -132,6 +132,7 @@ class TestPluginMetadata:
     def metadata_keys_repeat(self):
         return (
             "url",
+            "notes",
         )
 
     @pytest.fixture(scope="class")
