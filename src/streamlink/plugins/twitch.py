@@ -82,7 +82,7 @@ class TwitchM3U8Parser(M3U8Parser):
         map_ = self.state.get("map")
         key = self.state.get("key")
         discontinuity = self.state.pop("discontinuity", False)
-        ad = self._is_segment_ad(date)
+        ad = self._is_segment_ad(date, extinf.title)
 
         return Segment(
             uri,
@@ -97,11 +97,16 @@ class TwitchM3U8Parser(M3U8Parser):
             prefetch=False
         )
 
-    def _is_segment_ad(self, date: datetime) -> bool:
-        return any(self.m3u8.is_date_in_daterange(date, daterange) for daterange in self.m3u8.dateranges_ads)
+    def _is_segment_ad(self, date, title=None):
+        # type: (datetime, Optional[str]) -> bool
+        return (
+            title is not None and "Amazon" in title
+            or any(self.m3u8.is_date_in_daterange(date, daterange) for daterange in self.m3u8.dateranges_ads)
+        )
 
     @staticmethod
-    def _is_daterange_ad(daterange: DateRange) -> bool:
+    def _is_daterange_ad(daterange):
+        # type: (DateRange) -> bool
         return (
             daterange.classname == "twitch-stitched-ad"
             or str(daterange.id or "").startswith("stitched-ad-")
