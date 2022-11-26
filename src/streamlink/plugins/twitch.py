@@ -14,7 +14,9 @@ import logging
 import re
 import sys
 from collections import namedtuple
+from datetime import datetime, timedelta
 from random import random
+from typing import Optional
 
 from streamlink.compat import str, urlparse
 from streamlink.exceptions import NoStreamsError, PluginError
@@ -22,7 +24,7 @@ from streamlink.plugin import Plugin, pluginargument, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream, HLSStreamWorker
 from streamlink.stream.hls_filtered import FilteredHLSStreamReader, FilteredHLSStreamWriter
-from streamlink.stream.hls_playlist import M3U8, M3U8Parser, load as load_hls_playlist
+from streamlink.stream.hls_playlist import DateRange, M3U8, M3U8Parser, load as load_hls_playlist
 from streamlink.stream.http import HTTPStream
 from streamlink.utils.args import keyvalue
 from streamlink.utils.parse import parse_json, parse_qsd
@@ -52,21 +54,25 @@ class TwitchM3U8Parser(M3U8Parser):
         # This is better than using the duration of the last segment when regular segment durations vary a lot.
         # In low latency mode, the playlist reload time is the duration of the last segment.
         duration = last.duration if last.prefetch else sum(segment.duration for segment in segments) / float(len(segments))
-        segments.append(last._replace(
+        # Use the last duration for extrapolating the start time of the prefetch segment, which is needed for checking
+        # whether it is an ad segment and matches the parsed date ranges or not
+        date = last.date + timedelta(seconds=last.duration)
+        ad = self._is_segment_ad(date)
+        segment = last._replace(
             uri=self.uri(value),
             duration=duration,
-            prefetch=True
-        ))
+            title=None,
+            discontinuity=self.state.pop("discontinuity", False),
+            date=date,
+            ad=ad,
+            prefetch=True,
+        )
+        segments.append(segment)
 
     def parse_tag_ext_x_daterange(self, value):
         super(TwitchM3U8Parser, self).parse_tag_ext_x_daterange(value)
         daterange = self.m3u8.dateranges[-1]
-        is_ad = (
-            daterange.classname == "twitch-stitched-ad"
-            or str(daterange.id or "").startswith("stitched-ad-")
-            or any(attr_key.startswith("X-TV-TWITCH-AD-") for attr_key in daterange.x.keys())
-        )
-        if is_ad:
+        if self._is_daterange_ad(daterange):
             self.m3u8.dateranges_ads.append(daterange)
 
     def get_segment(self, uri):
@@ -76,7 +82,7 @@ class TwitchM3U8Parser(M3U8Parser):
         map_ = self.state.get("map")
         key = self.state.get("key")
         discontinuity = self.state.pop("discontinuity", False)
-        ad = any(self.m3u8.is_date_in_daterange(date, daterange) for daterange in self.m3u8.dateranges_ads)
+        ad = self._is_segment_ad(date)
 
         return Segment(
             uri,
@@ -89,6 +95,17 @@ class TwitchM3U8Parser(M3U8Parser):
             date,
             map_,
             prefetch=False
+        )
+
+    def _is_segment_ad(self, date: datetime) -> bool:
+        return any(self.m3u8.is_date_in_daterange(date, daterange) for daterange in self.m3u8.dateranges_ads)
+
+    @staticmethod
+    def _is_daterange_ad(daterange: DateRange) -> bool:
+        return (
+            daterange.classname == "twitch-stitched-ad"
+            or str(daterange.id or "").startswith("stitched-ad-")
+            or any(attr_key.startswith("X-TV-TWITCH-AD-") for attr_key in daterange.x.keys())
         )
 
 
@@ -368,7 +385,7 @@ class TwitchAPI:
             login=channel_or_vod if is_live else "",
             isVod=not is_live,
             vodID=channel_or_vod if not is_live else "",
-            **self.access_token_params,
+            **self.access_token_params
         )
         subschema = validate.none_or_all(
             {
