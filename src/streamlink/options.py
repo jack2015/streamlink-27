@@ -31,6 +31,9 @@ class Options(object):
             dest[_normalise_option_name(key)] = value
         return dest
 
+    def clear(self):
+        self.options = self.defaults.copy()
+
     def set(self, key, value):
         self.options[_normalise_option_name(key)] = value
 
