@@ -1,6 +1,6 @@
 import logging
-from threading import Event
 
+from streamlink.stream.filtered import FilteredStream
 from streamlink.stream.hls import HLSStreamReader, HLSStreamWriter
 
 log = logging.getLogger(__name__)
@@ -17,9 +17,9 @@ class FilteredHLSStreamWriter(HLSStreamWriter):
                 return super(FilteredHLSStreamWriter, self).write(sequence, result, *data)
             finally:
                 # unblock reader thread after writing data to the buffer
-                if not self.reader.filter_event.is_set():
+                if self.reader.is_paused():
                     log.info("Resuming stream output")
-                    self.reader.filter_event.set()
+                    self.reader.resume()
         else:
             log.debug("Discarding segment {0}".format(sequence.num))
 
@@ -28,32 +28,11 @@ class FilteredHLSStreamWriter(HLSStreamWriter):
             result.raw.drain_conn()
 
             # block reader thread if filtering out segments
-            if self.reader.filter_event.is_set():
+            if not self.reader.is_paused():
                 log.info("Filtering out segments and pausing stream output")
-                self.reader.filter_event.clear()
+                self.reader.pause()
 
 
-class FilteredHLSStreamReader(HLSStreamReader):
+class FilteredHLSStreamReader(FilteredStream, HLSStreamReader):
     def __init__(self, *args, **kwargs):
         super(FilteredHLSStreamReader, self).__init__(*args, **kwargs)
-        self.filter_event = Event()
-        self.filter_event.set()
-
-    def read(self, size):
-        while True:
-            try:
-                return super(FilteredHLSStreamReader, self).read(size)
-            except IOError:
-                # wait indefinitely until filtering ends
-                self.filter_event.wait()
-                if self.buffer.closed:
-                    return b""
-                # if data is available, try reading again
-                if self.buffer.length > 0:
-                    continue
-                # raise if not filtering and no data available
-                raise
-
-    def close(self):
-        super(FilteredHLSStreamReader, self).close()
-        self.filter_event.set()

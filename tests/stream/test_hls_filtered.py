@@ -84,6 +84,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
         self.await_write()
         data = self.await_read()
         self.assertEqual(data, self.content(segments), "Does not filter by default")
+        self.assertTrue(reader.filter_wait(timeout=0))
 
     @patch("streamlink.stream.hls_filtered.FilteredHLSStreamWriter.should_filter_sequence", new=filter_sequence)
     @patch("streamlink.stream.hls_filtered.log")
@@ -96,20 +97,20 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
         ])
         data = b""
 
-        self.assertTrue(reader.filter_event.is_set(), "Doesn't let the reader wait if not filtering")
+        self.assertFalse(reader.is_paused(), "Doesn't let the reader wait if not filtering")
 
         for i in range(2):
             self.await_write()
             self.await_write()
             self.assertEqual(len(mock_log.info.mock_calls), i * 2 + 1)
             self.assertEqual(mock_log.info.mock_calls[i * 2 + 0], call("Filtering out segments and pausing stream output"))
-            self.assertFalse(reader.filter_event.is_set(), "Lets the reader wait if filtering")
+            self.assertTrue(reader.is_paused(), "Lets the reader wait if filtering")
 
             self.await_write()
             self.await_write()
             self.assertEqual(len(mock_log.info.mock_calls), i * 2 + 2)
             self.assertEqual(mock_log.info.mock_calls[i * 2 + 1], call("Resuming stream output"))
-            self.assertTrue(reader.filter_event.is_set(), "Doesn't let the reader wait if not filtering")
+            self.assertFalse(reader.is_paused(), "Doesn't let the reader wait if not filtering")
 
             data += self.await_read()
 
@@ -143,17 +144,20 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
             Playlist(2, [Segment(2), Segment(3)], end=True)
         ])
 
-        self.assertTrue(reader.filter_event.is_set(), "Doesn't let the reader wait if not filtering")
+        self.assertFalse(reader.is_paused(), "Doesn't let the reader wait if not filtering")
 
         self.await_write()
         self.await_write()
-        self.assertFalse(reader.filter_event.is_set(), "Lets the reader wait if filtering")
+        self.assertTrue(reader.is_paused(), "Lets the reader wait if filtering")
+
+        # test the reader's filter_wait() method
+        self.assertFalse(reader.filter_wait(timeout=0), "Is filtering")
 
         # make reader read (no data available yet)
         thread.read_wait.set()
         # once data becomes available, the reader continues reading
         self.await_write()
-        self.assertTrue(reader.filter_event.is_set(), "Reader is not waiting anymore")
+        self.assertFalse(reader.is_paused(), "Reader is not waiting anymore")
 
         thread.read_done.wait()
         thread.read_done.clear()
@@ -170,26 +174,28 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
             Playlist(0, [SegmentFiltered(0), SegmentFiltered(1)])
         ])
 
-        # mock the reader thread's filter_event.wait method, so that the main thread can wait on its call
-        filter_event_wait_called = Event()
-        orig_wait = reader.filter_event.wait
+        # mock the reader thread's _event_filter.wait method, so that the main thread can wait on its call
+        event_filter_wait_called = Event()
+        orig_wait = reader._event_filter.wait
 
         def mocked_wait(*args, **kwargs):
-            filter_event_wait_called.set()
+            event_filter_wait_called.set()
             return orig_wait(*args, **kwargs)
 
-        mock = patch.object(reader.filter_event, "wait", side_effect=mocked_wait)
+        mock = patch.object(reader._event_filter, "wait", side_effect=mocked_wait)
         mock.start()
 
         # write first filtered segment and trigger the filter_event's lock
-        self.assertTrue(reader.filter_event.is_set(), "Doesn't let the reader wait if not filtering")
+        self.assertFalse(reader.is_paused(), "Doesn't let the reader wait if not filtering")
         self.await_write()
-        self.assertFalse(reader.filter_event.is_set(), "Lets the reader wait if filtering")
+        self.assertTrue(reader.is_paused(), "Lets the reader wait if filtering")
 
+        # test the reader's filter_wait() method
+        self.assertFalse(reader.filter_wait(timeout=0), "Is filtering")
         # make reader read (no data available yet)
         thread.read_wait.set()
         # before calling reader.close(), wait until reader thread's filter_event.wait was called
-        filter_event_wait_called.wait()
+        event_filter_wait_called.wait()
 
         # close stream while reader is waiting for filtering to end
         thread.reader.close()
