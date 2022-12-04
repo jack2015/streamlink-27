@@ -230,6 +230,8 @@ class SegmentedStreamReader(StreamIO):
         if current is not self.writer:  # pragma: no branch
             self.writer.join(timeout=self.timeout)
 
+        super(SegmentedStreamReader, self).close()
+
     def read(self, size):
         if not self.buffer:
             return b""
