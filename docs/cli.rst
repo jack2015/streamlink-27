@@ -348,8 +348,9 @@ Proxy Support
 You can use the :option:`--http-proxy` option to change the proxy server
 that Streamlink will use for HTTP and HTTPS requests. :option:`--http-proxy` sets
 the proxy for all HTTP and HTTPS requests, including WebSocket connections.
+
 If separate proxies for each protocol are required, they can be set using
-environment variables - see `Requests Proxies Documentation`_
+environment variables - see the `Requests Proxies Documentation`_.
 
 Both HTTP and SOCKS proxies are supported, as well as authentication in each of them.
 
@@ -365,7 +366,7 @@ Both HTTP and SOCKS proxies are supported, as well as authentication in each of 
     $ streamlink --http-proxy "socks4a://address:port"
     $ streamlink --http-proxy "socks5h://address:port"
 
-.. _Requests Proxies Documentation: https://2.python-requests.org/en/master/user/advanced/#proxies
+.. _Requests Proxies Documentation: https://requests.readthedocs.io/en/latest/user/advanced/#proxies
 
 
 Metadata variables
