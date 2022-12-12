@@ -7,7 +7,7 @@ import pytest
 
 import streamlink.plugins
 import tests.plugins
-from streamlink.compat import _inspect, is_py2
+from streamlink.compat import _inspect as inspect, is_py2
 from streamlink.plugin.plugin import Matcher, Plugin
 from streamlink.utils.module import load_module
 from streamlink_cli.argparser import build_parser
@@ -74,11 +74,11 @@ class TestPlugins:
             plugin.__plugin__.__init__ is Plugin.__init__
             or tuple(
                 (param.name, param.kind)
-                for param in _inspect.signature(plugin.__plugin__.__init__).parameters.values()
+                for param in inspect.signature(plugin.__plugin__.__init__).parameters.values()
             ) == (
-                ("self", _inspect.Parameter.POSITIONAL_OR_KEYWORD),
-                ("args", _inspect.Parameter.VAR_POSITIONAL),
-                ("kwargs", _inspect.Parameter.VAR_KEYWORD),
+                ("self", inspect.Parameter.POSITIONAL_OR_KEYWORD),
+                ("args", inspect.Parameter.VAR_POSITIONAL),
+                ("kwargs", inspect.Parameter.VAR_KEYWORD),
             )
         )
 
