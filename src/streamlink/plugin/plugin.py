@@ -229,7 +229,6 @@ class Plugin(object):
         self.matcher, self.match = next(((p, m) for p, m in matches if m is not None), (None, None))
 
     def __init__(self, *args, **kwargs):
-        # type: (str) -> None
         self.url = args[0]
 
         try:
