@@ -2,6 +2,12 @@ import os
 import signal
 import warnings
 
+try:
+    import freezegun.config
+    freezegun_config = True
+except ImportError:
+    freezegun_config = False
+
 import pytest
 
 # import streamlink_cli as early as possible to execute its default signal overrides
@@ -13,6 +19,13 @@ from streamlink.compat import is_py2, is_py3
 # immediately restore default signal handlers for the test runner
 signal.signal(signal.SIGINT, signal.default_int_handler)
 signal.signal(signal.SIGTERM, signal.default_int_handler)
+
+
+if freezegun_config:
+    # make freezegun ignore the following pytest modules, so it doesn't mess with pytest's --duration=N report
+    # when freezing time in fixtures, even though ["_pytest.runner.", "_pytest.terminal."] is already included
+    # in freezegun's default module ignore list (notice the trailing dots).
+    freezegun.config.configure(extend_ignore_list=["_pytest.runner", "_pytest.terminal"])
 
 
 # make pytest rewrite assertions in dynamically parametrized plugin tests
