@@ -14,7 +14,7 @@ __version_date__ = "2022-08-13"
 __title__ = "streamlink-27"
 __license__ = "Simplified BSD"
 __author__ = "Streamlink, Billy2011"
-__copyright__ = "Copyright 2022 Streamlink, Billy2011"
+__copyright__ = "Copyright 2023 Streamlink, Billy2011"
 __credits__ = ["https://github.com/streamlink/streamlink/blob/master/AUTHORS"]
 
 from streamlink.api import streams
