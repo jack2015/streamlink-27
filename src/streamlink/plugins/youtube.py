@@ -242,7 +242,7 @@ class YouTube(Plugin):
             adaptive_streams[itag] = url
             stream_type, stream_codecs = mimeType
 
-            if stream_type == "audio":
+            if stream_type == "audio" and itag in self.adp_audio:
                 streams["audio_{0}".format(stream_codecs)] = HTTPStream(self.session, url)
 
                 # find the best quality audio stream m4a, opus or vorbis
