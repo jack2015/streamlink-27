@@ -1,5 +1,124 @@
 # Changelog
 
+## streamlink 2.25.5.0 (2023-02-15)
+
+```text
+Billy2011 <kschmidt2007@googlemail.com> (58):
+      validate._validate: fix F821 in PY3
+      plugin.api.validate: rework XML validators(#4732)
+      plugins: replace XPath f-strings with variables(#4732)
+      plugins.cbsnews: fix regex, add metadata(#4743)
+      plugins.steam: fix login(#4745)
+      plugin: remove user_input_requester from bind()(#4746)
+      plugin: set Plugin.arguments class attr to None(#4747)
+      plugin: add pluginargument decorator(#4747)
+      plugins: switch to new pluginargument decorator(#4747)
+      plugin: add explicit pluginargument tests(#4751)
+      tests: rewrite plugin cookies tests(#4754)
+      plugins.mitele: fix and refactor plugin(#4760)
+      plugins.atresplayer: fix plugin(#4759)
+      cli: implement --player-external-http-continuous(#4739)
+      plugins.huya: update `liveId` to type `str` (#4763)
+      docs: add plugin{matcher,argument} docstrings(#4771)
+      plugin.api.validate: refactor ValidationError
+      plugins.okru: translate mobile URLs(#4779)
+      plugins.okru: support mobile page(#4780)
+      plugins: update plugin constructors(#4768)
+      plugins.cinergroup: fix showtvcomtr (#4817)
+      plugins.cinergroup: rewrite, add bloomberght (#4813)
+      plugins.trovo: fix VODs (#4812)
+      plugins.twitch: remove disable-hosting(#4805)
+      plugins.dailymotion: rewrite and fix plugin(#4821)
+      plugins.piczel: rewrite(#4822)
+      plugin.api.http_session: remove parse_* methods(#4803)
+      plugins.mitele: strip whitespace from stream URLs(#4839)
+      plugins.rtve: fix ZTNR.translate(#4840)
+      plugins.raiplay: update and fix plugin(#4851)
+      plugins.sbscokr: rewrite and fix plugin(#4865)
+      plugins.tvrplus: rewrite plugin(#4871)
+      plugins.btv: fix validation schema(#4885)
+      plugins.tf1: rewrite plugin, add "stream" VODs(#4892)
+      plugins.sbscokr: fix channel extraction
+      plugins.attheshore: fix _videoapi_url
+      plugins.tvp: rewrite and fix plugin, add VODs(#4905)
+      plugins.dailymotion: fix validation schema(#4910)
+      stream.hls_filtered: add more debug messages to write calls
+      plugins.twitch: add --twitch-access-token-param(#4952)
+      plugins.twitch: add --twitch-access-token-param(#4952)
+      plugins.twitch: fix date offset of prefetch ads((#4942)
+      plugins.twitch: add segment ad detection fallback(#4942)
+      stream.segmented: properly close StreamIO(#4972)
+      stream: add FilteredStream and abstract filtering(#4976)
+      plugins.tvp: fix channel ID lookup
+      stream.ffmpegmux: abort on ValueError during read(#4998)
+      plugins.svtplay: rewrite plugin and add HLS(#4994)
+      docs: fix requests docs link
+      docs: explain XDG base dir and parameter expansion
+      Update tests.test_plugins
+      plugin.Plugin: fix docs build error
+      docs: split cli/plugin, add cli/plugin/twitch(#4430)
+      plugins.dogan: rewrite and fix plugin(#5053)
+      2023
+      plugins.youtube: fix dash itag error
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (4):
+      plugins.tv8: update stream URL regex
+      plugins.bloomberg: update/fix headers to avoid bot detection
+      plugins.vtvgo: update headers
+      plugins.cdnbg: update regex
+
+Inokenty <inokenty.95@gmail.com> (1):
+      plugins.vkplay: new plugin (#5054)
+
+Nicolas Goy <kuon@goyman.com> (1):
+      docs: fix twitch oauth token header name (#4940)
+
+UltraHDR <108294295+UltraHDR@users.noreply.github.com> (2):
+      plugins.hiplayer: add alwasat.ly (#4778)
+      plugins.hiplayer: remove cnbcarabia.com (#4836)
+
+bastimeyer <mail@bastimeyer.de> (24):
+      plugins: remove common_jwplayer module
+      docs: update plugins extension for new arguments
+      plugins.ustreamtv: fix matcher
+      plugins.rtve: fix plugin
+      tests: refactor options tests
+      plugins: fix regex capture groups
+      stream.ffmpegmux: show warning if unavailable
+      plugins.tv3cat: rewrite
+      plugins.linelive: rewrite
+      stream.ffmpegmux: remove avconv
+      docs: handle suppressed plugin arguments
+      plugins.vinhlongtv: rewrite and fix plugin
+      plugin: remove broken decorator
+      plugin: fix get_argument()
+      plugins.hiplayer: fix plugin
+      plugins.egame: remove plugin
+      plugins.qq: rewrite and fix plugin
+      plugins.goltelevision: add missing HTTP headers
+      plugins.atresplayer: update input URLs
+      plugins: make $notes metadata repeatable
+      plugins.twitch: fix ad filtering bug
+      plugins.twitch: better access token error handling
+      tests: change order of collected tests
+      tests: fix freezegun's default module ignore list
+
+fenopa <62562166+fenopa@users.noreply.github.com> (2):
+      plugins.tv8: filter out ad segments
+      plugins.turkuvaz: fix url match (#5021)
+
+streamlinkbot <streamlinkbot@users.noreply.github.com> (5):
+      plugin.api: update useragents
+      plugin.api: update useragents
+      plugin.api: update useragents
+      plugin.api: update useragents
+      plugin.api: update useragents
+
+Ömer Görür <102440553+omergorur@users.noreply.github.com> (1):
+      plugins.turkuvaz: rewrite, update supported sites (#4819)
+```
+
+
 ## streamlink 2.27.4.0 (2022-08-13)
 
 ```text
